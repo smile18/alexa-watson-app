@@ -1,0 +1,16 @@
+{
+  "LaunchRequest" :
+  {
+    "ask": "Welcome to Watson. What would you like to know?",
+    "reprompt": " What would you like to know?"
+  },
+  "AMAZON.HelpIntent" :
+  {
+    "ask": "Here are some thing you can say: what\'s the recipe, or, you can say exit...Now, what can I help you with?",
+    "reprompt": " What would you like to know?"
+  },
+  "AMAZON.StopIntent":
+  {
+    "tell": "See ya! Bye.."
+  }
+}

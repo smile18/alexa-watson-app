@@ -10,14 +10,14 @@ var Alexa = require('alexa-sdk');
 var AppleDataHelper = require('./apple_data_helper');
 
 exports.handler = function (event, context, callback) {
-  
-    
+
+
     var alexa = Alexa.handler(event, context);
     alexa.APP_ID = "A345382Sds=93478";
     // alexa.resources = languageStrings;
     alexa.registerHandlers(handlers);
     alexa.execute();
-    
+
 };
 
 var handlers = {
@@ -28,30 +28,11 @@ var handlers = {
         this.emit(':ask', this.attributes['speechOutput'], this.attributes['repromptSpeech']);
     },
     'PopularInfoIntent': function() {
-
-        var category = 'MOVIES';
-        var limit = 10;
         var reprompt = 'Tell me what kind of data and how many you want';
-        if (_.isEmpty(category)) {
-            let prompt = 'I didn\'t hear a category. Tell me the category.';
-            // res.say(prompt).reprompt(reprompt).shouldEndSession(false);
-            this.emit(':ask', prompt, reprompt);
-            // return true;
-        } else {
-            let appleHelper = new AppleDataHelper();
+        var data = getData();
+        console.log("This is the data:"+data);
+        this.emit(':tell',"test")
 
-            appleHelper.requestAppleData(category, limit).then(function (appleData) {
-                console.log(appleData);
-                // res.say(appleHelper.formatAppleData(appleData)).send();
-                this.emit(':tellWithCard', appleHelper.formatAppleData(appleData), 'TOP MOVIES',appleHelper.formatAppleData(appleData) );
-            }).catch(function (err) {
-                console.log(err.statusCode);
-                let prompt = 'I didn\'t have data for ' + category;
-                // res.say(prompt).reprompt(reprompt).shouldEndSession(false).send();
-                this.emit(':tell', prompt);
-            });
-            // return false;
-        }
     },
     'AMAZON.HelpIntent': function () {
         this.attributes['speechOutput'] = this.t("HELP_MESSAGE");
@@ -77,26 +58,21 @@ var handlers = {
     }
 };
 
-// app.launch(function(req, res) {
-//     let prompt = 'What kind of data you want from apple? songs, movies, apps?';
-//     res.say(prompt).reprompt(prompt).shouldEndSession(false);
-// });
-//
-// app.intent('PopularInfo', {
-//         'slots': {
-//             'CATEGORY': 'string',
-//             'SIZE': 'number'
-//         },
-//         'utterances': ['{|get me |give me} {|popular |top } {|SIZE}  {-|CATEGORY}']
-//     },
-//
-// );
-//
-// //hack to support custom utterances in utterance expansion string
-// let utterancesMethod = app.utterances;
-// app.utterances = function() {
-//     return utterancesMethod().replace(/\{\-\|/g, '{');
-// };
+var getData = function(callback){
+    var category = 'MOVIES';
+    var limit = 10;
+    var appleHelper = new AppleDataHelper();
+
+    appleHelper.requestAppleData(category, limit).then(function (appleData) {
+        console.log("The data received is :"+appleHelper.formatAppleData(appleData));
+        // res.say(appleHelper.formatAppleData(appleData)).send();
+        callback(appleData);
+    }).catch(function (err) {
+        console.log("Err Code:"+err);
+        let prompt = 'I didn\'t have data for ' + category;
+        this.emit(':tell', prompt);
+    });
+};
 
 var languageStrings = {
     "en": {
