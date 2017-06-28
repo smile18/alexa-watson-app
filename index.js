@@ -8,11 +8,13 @@ var _ = require('lodash');
 var Alexa = require('alexa-sdk');
 // let app = new Alexa.app('watson');
 var AppleDataHelper = require('./apple_data_helper');
+var http = require('http');
+var link_get = 'http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topMovies/limit=10/json';
 
 exports.handler = function (event, context, callback) {
 
 
-    var alexa = Alexa.handler(event, context);
+    var alexa = Alexa.handler(event, context, callback);
     alexa.APP_ID = "A345382Sds=93478";
     // alexa.resources = languageStrings;
     alexa.registerHandlers(handlers);
@@ -28,10 +30,50 @@ var handlers = {
         this.emit(':ask', this.attributes['speechOutput'], this.attributes['repromptSpeech']);
     },
     'PopularInfoIntent': function() {
-        var reprompt = 'Tell me what kind of data and how many you want';
-        var data = getData();
-        console.log("This is the data:"+data);
-        this.emit(':tell',"test")
+        // var self = this;
+        //     http.get("http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topMovies/limit=10/json", (res) => {
+        //         const statusCode = res.statusCode;
+        //         const contentType = res.headers['content-type'];
+        //
+        //         let error;
+        //         if (statusCode !== 200) {
+        //             error = new Error(`Request Failed.\n` +
+        //                 `Status Code: ${statusCode}`);
+        //         }
+        //         if (error) {
+        //             console.log(error.message);
+        //             // consume response data to free up memory
+        //             res.resume();
+        //             return;
+        //         }
+        //
+        //         res.setEncoding('utf8');
+        //         let rawData = '';
+        //         res.on('data', (chunk) => rawData += chunk);
+        //         res.on('end', () => {
+        //             try {
+        //                 let parsedData = JSON.parse(rawData);
+        //                 console.log(parsedData);
+        //                 console.log(parsedData['feed']['entry'][0]['im:name']['label']);
+        //                 self.emit(':tell',parsedData['feed']['entry'][0]['im:name']['label']);
+        //
+        //             } catch (e) {
+        //                 console.log(e.message);
+        //             }
+        //         });
+        //     }).on('error', (e) => {
+        //         console.log(`Got error: ${e.message}`);
+        //     });
+
+        var self =this;
+       getData.then(function (data) {
+            console.log("Something")
+            console.log(data+":Hope some data");
+           self.emit(":tell",data);
+        }).catch(function(err){
+           console.log("Something went bad")
+        });
+
 
     },
     'AMAZON.HelpIntent': function () {
@@ -58,7 +100,7 @@ var handlers = {
     }
 };
 
-var getData = function(callback){
+var getData = new Promise((resolve, reject) => {
     var category = 'MOVIES';
     var limit = 10;
     var appleHelper = new AppleDataHelper();
@@ -66,13 +108,12 @@ var getData = function(callback){
     appleHelper.requestAppleData(category, limit).then(function (appleData) {
         console.log("The data received is :"+appleHelper.formatAppleData(appleData));
         // res.say(appleHelper.formatAppleData(appleData)).send();
-        callback(appleData);
+        resolve(appleHelper.formatAppleData(appleData));
     }).catch(function (err) {
-        console.log("Err Code:"+err);
-        let prompt = 'I didn\'t have data for ' + category;
-        this.emit(':tell', prompt);
+
+        reject(err);
     });
-};
+});
 
 var languageStrings = {
     "en": {
@@ -83,7 +124,7 @@ var languageStrings = {
             "WELCOME_REPROMPT": "For instructions on what you can say, please say help me.",
             "DISPLAY_CARD_TITLE": "%s  - Recipe for %s.",
             "HELP_MESSAGE": "You can ask questions such as, what\'s the recipe, or, you can say exit...Now, what can I help you with?",
-            "HELP_REPROMPT": "You can say things like, what\'s the recipe, or you can say exit...Now, what can I help you with?",
+            "HELP_  REPROMPT": "You can say things like, what\'s the recipe, or you can say exit...Now, what can I help you with?",
             "STOP_MESSAGE": "Goodbye!",
             "RECIPE_REPEAT_MESSAGE": "Try saying repeat.",
             "RECIPE_NOT_FOUND_MESSAGE": "I\'m sorry, I currently do not know ",
