@@ -3,18 +3,13 @@
  */
 
 'use strict';
-// module.change_code = 1;
-var _ = require('lodash');
-var Alexa = require('alexa-sdk');
-// let app = new Alexa.app('watson');
-var AppleDataHelper = require('./apple_data_helper');
-var http = require('http');
-var link_get = 'http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topMovies/limit=10/json';
+let _ = require('lodash');
+let Alexa = require('alexa-sdk');
+let AppleDataHelper = require('./apple_data_helper');
 
 exports.handler = function (event, context, callback) {
 
-
-    var alexa = Alexa.handler(event, context, callback);
+    let alexa = Alexa.handler(event, context, callback);
     alexa.APP_ID = "A345382Sds=93478";
     // alexa.resources = languageStrings;
     alexa.registerHandlers(handlers);
@@ -22,56 +17,23 @@ exports.handler = function (event, context, callback) {
 
 };
 
-var handlers = {
+let handlers = {
     // Alexa launch intent to start speaking
     'LaunchRequest': function () {
         this.attributes['speechOutput'] = this.t("WELCOME_MESSAGE", this.t("SKILL_NAME"));
         this.attributes['repromptSpeech'] = this.t("WELCOME_REPROMPT");
         this.emit(':ask', this.attributes['speechOutput'], this.attributes['repromptSpeech']);
     },
-    'PopularInfoIntent': function() {
-        // var self = this;
-        //     http.get("http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topMovies/limit=10/json", (res) => {
-        //         const statusCode = res.statusCode;
-        //         const contentType = res.headers['content-type'];
-        //
-        //         let error;
-        //         if (statusCode !== 200) {
-        //             error = new Error(`Request Failed.\n` +
-        //                 `Status Code: ${statusCode}`);
-        //         }
-        //         if (error) {
-        //             console.log(error.message);
-        //             // consume response data to free up memory
-        //             res.resume();
-        //             return;
-        //         }
-        //
-        //         res.setEncoding('utf8');
-        //         let rawData = '';
-        //         res.on('data', (chunk) => rawData += chunk);
-        //         res.on('end', () => {
-        //             try {
-        //                 let parsedData = JSON.parse(rawData);
-        //                 console.log(parsedData);
-        //                 console.log(parsedData['feed']['entry'][0]['im:name']['label']);
-        //                 self.emit(':tell',parsedData['feed']['entry'][0]['im:name']['label']);
-        //
-        //             } catch (e) {
-        //                 console.log(e.message);
-        //             }
-        //         });
-        //     }).on('error', (e) => {
-        //         console.log(`Got error: ${e.message}`);
-        //     });
+    'PopularInfoIntent': function () {
 
-        var self =this;
-       getData.then(function (data) {
-            console.log("Something")
-            console.log(data+":Hope some data");
-           self.emit(":tell",data);
-        }).catch(function(err){
-           console.log("Something went bad")
+        let term = this.event.request.intent.slots.Term.value;
+        let limit = this.event.request.intent.slots.Limit.value;
+        let self = this;
+
+        getData(term, limit).then(function (data) {
+            self.emit(":tell", data);
+        }).catch(function (err) {
+            self.emit(":tell", "Unable to get Data");
         });
 
 
@@ -90,7 +52,7 @@ var handlers = {
     'AMAZON.CancelIntent': function () {
         this.emit('SessionEndedRequest');
     },
-    'SessionEndedRequest':function () {
+    'SessionEndedRequest': function () {
         this.emit(':tell', this.t("STOP_MESSAGE"));
     },
     'Unhandled': function () {
@@ -100,22 +62,22 @@ var handlers = {
     }
 };
 
-var getData = new Promise((resolve, reject) => {
-    var category = 'MOVIES';
-    var limit = 10;
-    var appleHelper = new AppleDataHelper();
+let getData = function getMyData(term, limit) {
+    console.log("Term " + term);
+    console.log(" Limit " + limit);
+    return new Promise((resolve, reject) => {
+        let appleHelper = new AppleDataHelper();
 
-    appleHelper.requestAppleData(category, limit).then(function (appleData) {
-        console.log("The data received is :"+appleHelper.formatAppleData(appleData));
-        // res.say(appleHelper.formatAppleData(appleData)).send();
-        resolve(appleHelper.formatAppleData(appleData));
-    }).catch(function (err) {
-
-        reject(err);
+        appleHelper.requestAppleData(term.toUpperCase(), limit).then(function (appleData) {
+            console.log("The data received is :" + appleHelper.formatAppleData(appleData));
+            resolve(appleHelper.formatAppleData(appleData));
+        }).catch(function (err) {
+            reject(err);
+        });
     });
-});
+};
 
-var languageStrings = {
+let languageStrings = {
     "en": {
         "translation": {
             // "RECIPES": recipes.RECIPE_EN_US,
